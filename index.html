@@ -4,90 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Dashboard</title>
-    <!-- นำเข้าฟอนต์ Kanit -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- นำเข้า LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     
     <style>
-        :root {
-            --primary-green: #2E4531; /* สีเขียวทางการ */
-            --light-green: #E8F5E9;
-            --dark-gray: #333;
-            --light-gray: #f5f5f5;
-        }
-        
-        body {
-            font-family: 'Kanit', sans-serif;
-            background-color: var(--light-gray);
-            margin: 0;
-            padding: 15px;
-            color: var(--dark-gray);
-        }
-
-        .header {
-            background-color: var(--primary-green);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .control-panel {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        input, select, button {
-            font-family: 'Kanit', sans-serif;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .btn {
-            background-color: var(--primary-green);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .btn:hover { background-color: #1a291d; }
-        
-        .btn-export { background-color: #4CAF50; }
-
-        .task-card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--primary-green);
-        }
-
-        .task-title { font-weight: 600; font-size: 16px; margin-bottom: 5px; }
-        .task-detail { font-size: 13px; color: #666; margin-bottom: 5px; }
-        
-        .status-update {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-        }
-
+        :root { --primary-green: #2E4531; --light-gray: #f5f5f5; }
+        body { font-family: 'Kanit', sans-serif; background-color: var(--light-gray); margin: 0; padding: 15px; color: #333; }
+        .header { background-color: var(--primary-green); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; font-size: 18px; font-weight: 500; }
+        .control-panel { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
+        input, select, button { font-family: 'Kanit', sans-serif; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; width: 100%; box-sizing: border-box;}
+        .filter-row { display: flex; gap: 10px; }
+        .btn-export { background-color: #4CAF50; color: white; border: none; font-weight: 500; cursor: pointer;}
+        .task-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary-green); }
+        .task-title { font-weight: 600; font-size: 16px; margin-bottom: 8px; }
+        .task-detail { font-size: 13px; color: #555; margin-bottom: 4px; }
+        .status-update { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
         .loading { text-align: center; padding: 20px; font-weight: 500; }
     </style>
 </head>
@@ -97,74 +28,80 @@
 
     <div class="control-panel">
         <input type="text" id="searchInput" placeholder="ค้นหาชื่องาน..." onkeyup="applyFilters()">
-        <select id="userFilter" onchange="applyFilters()">
-            <option value="all">ดูงานทั้งหมด</option>
-            <option value="me">ดูเฉพาะงานของฉัน</option>
-        </select>
-        <select id="sortFilter" onchange="applyFilters()">
-            <option value="newest">วันที่ใหม่สุด-เก่าสุด</option>
-            <option value="oldest">วันที่เก่าสุด-ใหม่สุด</option>
-        </select>
-        <button class="btn btn-export" onclick="exportToCSV()">📥 ดาวน์โหลดรายงาน (CSV)</button>
+        
+        <div class="filter-row">
+            <select id="userFilter" onchange="applyFilters()">
+                <option value="all">ผู้ปฏิบัติงาน (ทั้งหมด)</option>
+            </select>
+            <select id="commanderFilter" onchange="applyFilters()">
+                <option value="all">ผู้บังคับบัญชา (ทั้งหมด)</option>
+            </select>
+        </div>
+
+        <div class="filter-row">
+            <input type="date" id="dateFilter" onchange="applyFilters()">
+            <select id="sortFilter" onchange="applyFilters()">
+                <option value="newest">เก่า-ใหม่</option>
+                <option value="oldest">ใหม่-เก่า</option>
+            </select>
+        </div>
+        
+        <button class="btn-export" onclick="exportToCSV()">📥 ดาวน์โหลดรายงาน (CSV)</button>
     </div>
 
-    <div id="taskContainer">
-        <div class="loading">กำลังโหลดข้อมูล...</div>
-    </div>
+    <div id="taskContainer"><div class="loading">กำลังโหลดข้อมูล...</div></div>
 
     <script>
-        // === ตั้งค่าตัวแปรหลัก ===
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbytW5au3OsXJWr2h47TqxgTIzbvLUm0-KB5c4aGBRMm9Gz__3MJEKcy_dNwMOJrHds/exec'; // ใส่ URL จาก Phase 5.1
-        const LIFF_ID = '2010804535-8G296pIA'; // เดี๋ยวเราจะได้ใน Phase 5.2
-        
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbytW5au3OsXJWr2h47TqxgTIzbvLUm0-KB5c4aGBRMm9Gz__3MJEKcy_dNwMOJrHds/exec'; // <<--- ตรงนี้สำคัญมาก ต้องใส่ให้ถูก
         let allTasks = [];
-        let currentUserName = "";
 
-        // 1. เริ่มต้นการทำงาน (Initialize LIFF)
         async function main() {
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                if (liff.isLoggedIn()) {
-                    const profile = await liff.getProfile();
-                    currentUserName = profile.displayName; // เก็บชื่อผู้ใช้ไว้กรองงาน
-                    document.getElementById('userFilter').value = 'me'; // Default เป็นงานของฉัน
-                }
-                fetchTasks();
-            } catch (err) {
-                console.error("LIFF Init Error: ", err);
-                fetchTasks(); // โหลดข้อมูลแม้ไม่ได้เปิดผ่าน LINE
-            }
-        }
-
-        // 2. ดึงข้อมูลจาก Google Sheets (doGet)
-        async function fetchTasks() {
             try {
                 const response = await fetch(GAS_API_URL);
                 const result = await response.json();
-                allTasks = result.data;
+                allTasks = result.tasks || [];
+                const users = result.users || [];
+                
+                // สร้าง Dropdown ผู้ปฏิบัติงานและผู้บังคับบัญชา
+                const userFilter = document.getElementById('userFilter');
+                const cmdFilter = document.getElementById('commanderFilter');
+                users.forEach(u => {
+                    userFilter.innerHTML += `<option value="${u}">${u}</option>`;
+                    cmdFilter.innerHTML += `<option value="${u}">${u}</option>`;
+                });
+
                 applyFilters();
             } catch (error) {
-                document.getElementById('taskContainer').innerHTML = '<div class="loading">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
+                document.getElementById('taskContainer').innerHTML = '<div class="loading">เกิดข้อผิดพลาดในการโหลดข้อมูล (ตรวจสอบ URL)</div>';
             }
         }
 
-        // 3. ระบบค้นหา กรอง และเรียงลำดับ
         function applyFilters() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const userView = document.getElementById('userFilter').value;
+            const cmdView = document.getElementById('commanderFilter').value;
+            const dateView = document.getElementById('dateFilter').value; // มาเป็น YYYY-MM-DD
             const sortOrder = document.getElementById('sortFilter').value;
 
+            // แปลงวันที่สำหรับ Filter
+            let formattedDateView = "";
+            if(dateView) {
+                const dp = dateView.split('-');
+                formattedDateView = `${dp[2]}/${dp[1]}/${dp[0]}`;
+            }
+
             let filtered = allTasks.filter(task => {
-                const matchSearch = task.Task_Name.toLowerCase().includes(searchText);
-                const matchUser = userView === 'all' ? true : task.Assignee.includes(currentUserName);
-                return matchSearch && matchUser;
+                const matchSearch = task.Task_Name.toLowerCase().includes(searchText) || (task.Location && task.Location.toLowerCase().includes(searchText));
+                const matchUser = userView === 'all' ? true : task.Assignee.includes(userView);
+                const matchCmd = cmdView === 'all' ? true : (task.Commander && task.Commander.includes(cmdView));
+                const matchDate = !formattedDateView ? true : task.Date === formattedDateView;
+                
+                return matchSearch && matchUser && matchCmd && matchDate;
             });
 
-            // การเรียงลำดับวันที่ (แปลง String วันที่ dd/MM/yyyy กลับเป็น Date)
             filtered.sort((a, b) => {
-                const dateA = parseDate(a.Date);
-                const dateB = parseDate(b.Date);
-                return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+                const dA = parseDate(a.Date); const dB = parseDate(b.Date);
+                return sortOrder === 'newest' ? dA - dB : dB - dA;
             });
 
             renderTasks(filtered);
@@ -176,71 +113,55 @@
             return new Date(parts[2], parts[1] - 1, parts[0]);
         }
 
-        // 4. แสดงผลข้อมูลลงบนหน้าจอ
         function renderTasks(tasks) {
             const container = document.getElementById('taskContainer');
+            if (tasks.length === 0) { container.innerHTML = '<div class="loading">ไม่พบภารกิจ</div>'; return; }
             container.innerHTML = '';
             
-            if (tasks.length === 0) {
-                container.innerHTML = '<div class="loading">ไม่พบภารกิจ</div>';
-                return;
-            }
-
             tasks.forEach(task => {
-                const card = document.createElement('div');
-                card.className = 'task-card';
-                card.innerHTML = `
-                    <div class="task-title">${task.Task_Name}</div>
-                    <div class="task-detail">📅 วันที่: ${task.Date}</div>
-                    <div class="task-detail">👤 ผู้รับผิดชอบ: ${task.Assignee}</div>
-                    <div class="status-update">
-                        <span style="font-size:13px; font-weight:500;">สถานะ: ${task.Status}</span>
-                        <select onchange="updateStatus('${task.Task_ID}', this.value)">
-                            <option value="" disabled selected>อัปเดต...</option>
-                            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
-                            <option value="เสร็จสิ้น">เสร็จสิ้น</option>
-                        </select>
+                const locationTxt = task.Location ? task.Location : '-';
+                const cmdTxt = task.Commander ? task.Commander : '-';
+                container.innerHTML += `
+                    <div class="task-card">
+                        <div class="task-title">${task.Task_Name}</div>
+                        <div class="task-detail">📅 ${task.Date} | ⏰ ${task.Time}</div>
+                        <div class="task-detail">📍 สถานที่: ${locationTxt}</div>
+                        <div class="task-detail">⭐ ผบ.เหตุการณ์: ${cmdTxt}</div>
+                        <div class="task-detail">👤 ผู้รับผิดชอบ: ${task.Assignee}</div>
+                        <div class="status-update">
+                            <span style="font-size:13px; font-weight:500; color: #2E4531;">สถานะ: ${task.Status}</span>
+                            <select style="width: 120px;" onchange="updateStatus('${task.Task_ID}', this.value)">
+                                <option value="" disabled selected>อัปเดต...</option>
+                                <option value="รอดำเนินการ">รอดำเนินการ</option>
+                                <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                                <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                            </select>
+                        </div>
                     </div>
                 `;
-                container.appendChild(card);
             });
         }
 
-        // 5. อัปเดตสถานะกลับไปยัง Google Sheets (doPost)
         async function updateStatus(taskId, newStatus) {
-            alert(`กำลังอัปเดตสถานะเป็น: ${newStatus}`);
+            alert(`กำลังอัปเดตสถานะ...`);
             try {
-                await fetch(GAS_API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ taskId: taskId, newStatus: newStatus })
-                });
-                fetchTasks(); // โหลดข้อมูลใหม่เพื่อรีเฟรชหน้าจอ
-            } catch (error) {
-                alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
-            }
+                await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateStatus', taskId: taskId, newStatus: newStatus }) });
+                main(); // รีเฟรชข้อมูล
+            } catch (error) { alert('เกิดข้อผิดพลาดในการอัปเดต'); }
         }
 
-        // 6. ส่งออกเป็นไฟล์ CSV
         function exportToCSV() {
             if (allTasks.length === 0) return;
             const headers = Object.keys(allTasks[0]).join(',');
-            const rows = allTasks.map(task => 
-                Object.values(task).map(val => `"${val}"`).join(',')
-            ).join('\n');
-            
+            const rows = allTasks.map(t => Object.values(t).map(v => `"${v}"`).join(',')).join('\n');
             const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + headers + '\n' + rows;
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Task_Report.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            link.setAttribute("href", encodedUri); link.setAttribute("download", "Task_Report.csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // เรียกใช้งานตอนเปิดหน้าเว็บ
         main();
     </script>
 </body>
 </html>
-
