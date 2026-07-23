@@ -27,7 +27,7 @@
     <div class="header">ติดตามภารกิจประจำวัน</div>
 
     <div class="control-panel">
-        <input type="text" id="searchInput" placeholder="ค้นหาชื่องาน..." onkeyup="applyFilters()">
+        <input type="text" id="searchInput" placeholder="ค้นหาชื่องาน หรือ สถานที่..." onkeyup="applyFilters()">
         
         <div class="filter-row">
             <select id="userFilter" onchange="applyFilters()">
@@ -40,9 +40,18 @@
 
         <div class="filter-row">
             <input type="date" id="dateFilter" onchange="applyFilters()">
+            <select id="statusFilter" onchange="applyFilters()">
+                <option value="all">สถานะ (ทั้งหมด)</option>
+                <option value="รอดำเนินการ">รอดำเนินการ</option>
+                <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+            </select>
+        </div>
+        
+        <div class="filter-row">
             <select id="sortFilter" onchange="applyFilters()">
-                <option value="newest">เก่า-ใหม่</option>
-                <option value="oldest">ใหม่-เก่า</option>
+                <option value="newest">วันที่จัดงาน (เก่า-ใหม่)</option>
+                <option value="oldest">วันที่จัดงาน (ใหม่-เก่า)</option>
             </select>
         </div>
         
@@ -80,7 +89,8 @@
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const userView = document.getElementById('userFilter').value;
             const cmdView = document.getElementById('commanderFilter').value;
-            const dateView = document.getElementById('dateFilter').value; // มาเป็น YYYY-MM-DD
+            const dateView = document.getElementById('dateFilter').value; 
+            const statusView = document.getElementById('statusFilter').value; // ค่าดรอปดาวน์สถานะ
             const sortOrder = document.getElementById('sortFilter').value;
 
             // แปลงวันที่สำหรับ Filter
@@ -95,8 +105,9 @@
                 const matchUser = userView === 'all' ? true : task.Assignee.includes(userView);
                 const matchCmd = cmdView === 'all' ? true : (task.Commander && task.Commander.includes(cmdView));
                 const matchDate = !formattedDateView ? true : task.Date === formattedDateView;
+                const matchStatus = statusView === 'all' ? true : task.Status === statusView; // เช็กสถานะ
                 
-                return matchSearch && matchUser && matchCmd && matchDate;
+                return matchSearch && matchUser && matchCmd && matchDate && matchStatus;
             });
 
             filtered.sort((a, b) => {
@@ -121,6 +132,12 @@
             tasks.forEach(task => {
                 const locationTxt = task.Location ? task.Location : '-';
                 const cmdTxt = task.Commander ? task.Commander : '-';
+                
+                // แยกสีสถานะเพื่อความชัดเจน
+                let statusColor = "#333";
+                if(task.Status === "เสร็จสิ้น") statusColor = "#4CAF50"; // สีเขียว
+                if(task.Status === "กำลังดำเนินการ") statusColor = "#ff9800"; // สีส้ม
+
                 container.innerHTML += `
                     <div class="task-card">
                         <div class="task-title">${task.Task_Name}</div>
@@ -129,7 +146,7 @@
                         <div class="task-detail">⭐ ผบ.เหตุการณ์: ${cmdTxt}</div>
                         <div class="task-detail">👤 ผู้รับผิดชอบ: ${task.Assignee}</div>
                         <div class="status-update">
-                            <span style="font-size:13px; font-weight:500; color: #2E4531;">สถานะ: ${task.Status}</span>
+                            <span style="font-size:13px; font-weight:600; color: ${statusColor};">สถานะ: ${task.Status}</span>
                             <select style="width: 120px;" onchange="updateStatus('${task.Task_ID}', this.value)">
                                 <option value="" disabled selected>อัปเดต...</option>
                                 <option value="รอดำเนินการ">รอดำเนินการ</option>
