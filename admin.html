@@ -3,83 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สร้างการมอบหมายงาน</title>
+    <title>สร้างและจัดการการมอบหมายงาน</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-green: #2E4531; 
-            --light-green: #E8F5E9;
-            --dark-gray: #333;
-        }
-        body {
-            font-family: 'Kanit', sans-serif;
-            background-color: #f5f5f5;
-            padding: 20px;
-            color: var(--dark-gray);
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .header {
-            background-color: var(--primary-green);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            border-radius: 8px;
-            font-size: 24px;
-            margin-bottom: 25px;
-        }
+        :root { --primary-green: #2E4531; --light-green: #E8F5E9; --dark-gray: #333; --danger-red: #d32f2f; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f5f5f5; padding: 20px; color: var(--dark-gray); }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px;}
+        .header { background-color: var(--primary-green); color: white; padding: 15px; text-align: center; border-radius: 8px; font-size: 24px; margin-bottom: 25px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; font-size: 18px; font-weight: 500; margin-bottom: 8px; }
-        input[type="text"], input[type="date"], input[type="time"] {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            font-family: 'Kanit', sans-serif;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        .user-list {
-            background: var(--light-green);
-            padding: 15px;
-            border-radius: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .user-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-        .user-item input[type="checkbox"] {
-            transform: scale(1.5);
-            margin-right: 15px;
-        }
-        .btn-submit {
-            background-color: var(--primary-green);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 15px;
-            font-size: 20px;
-            font-family: 'Kanit', sans-serif;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        input[type="text"], input[type="date"], select { width: 100%; padding: 12px; font-size: 16px; font-family: 'Kanit', sans-serif; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .time-container { display: flex; gap: 10px; align-items: center; }
+        .time-container select { flex: 1; }
+        .user-list { background: var(--light-green); padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto; border: 1px solid #ccc;}
+        .user-item { display: flex; align-items: center; margin-bottom: 10px; font-size: 18px; }
+        .user-item input[type="checkbox"] { transform: scale(1.5); margin-right: 15px; }
+        .btn { border: none; padding: 15px; font-size: 18px; font-family: 'Kanit', sans-serif; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; color: white; font-weight: 500;}
+        .btn-submit { background-color: var(--primary-green); }
         .btn-submit:hover { background-color: #1a291d; }
+        .btn-manage { background-color: #fbc02d; color: black; margin-bottom: 20px;}
+        .btn-delete { background-color: var(--danger-red); padding: 8px; width: auto; font-size: 14px;}
+        .task-list { display: none; }
+        .task-card { background: #fff3f3; padding: 15px; border-radius: 8px; border-left: 4px solid var(--danger-red); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
     </style>
 </head>
 <body>
 
 <div class="container">
+    <button class="btn btn-manage" onclick="toggleManageSection()">⚙️ ดูงานที่มอบหมายแล้ว (เพื่อลบ/แก้ไข)</button>
+
+    <div id="manageSection" class="task-list">
+        <h3>รายการงานล่าสุด</h3>
+        <div id="taskListContainer">กำลังโหลด...</div>
+        <hr style="margin: 20px 0;">
+    </div>
+
     <div class="header">ระบบสร้างงานและมอบหมายภารกิจ</div>
 
     <div class="form-group">
@@ -94,91 +52,128 @@
 
     <div class="form-group">
         <label>เวลาที่ปฏิบัติงาน</label>
-        <input type="time" id="taskTime">
-    </div>
-
-    <div class="form-group">
-        <label>ผู้รับผิดชอบ (เลือกได้มากกว่า 1 คน)</label>
-        <div class="user-list" id="userCheckboxes">
-            <!-- รายชื่อจะถูกดึงมาแสดงตรงนี้อัตโนมัติ -->
-            <div style="text-align: center;">กำลังโหลดรายชื่อ...</div>
+        <div class="time-container">
+            <select id="taskTimeHH"></select> <span>:</span> <select id="taskTimeMM"></select>
         </div>
     </div>
 
-    <button class="btn-submit" onclick="submitTask()" id="submitBtn">บันทึกและส่งแจ้งเตือน</button>
+    <div class="form-group">
+        <label>สถานที่</label>
+        <input type="text" id="taskLocation" placeholder="พิมพ์ชื่อสถานที่...">
+    </div>
+
+    <div class="form-group">
+        <label>ผู้บังคับบัญชาที่ไปงาน (เลือกได้มากกว่า 1)</label>
+        <div class="user-list" id="commanderCheckboxes">กำลังโหลด...</div>
+    </div>
+
+    <div class="form-group">
+        <label>ผู้ปฏิบัติงาน / รับผิดชอบ (เลือกได้มากกว่า 1)</label>
+        <div class="user-list" id="userCheckboxes">กำลังโหลด...</div>
+    </div>
+
+    <button class="btn btn-submit" onclick="submitTask()" id="submitBtn">บันทึกและส่งแจ้งเตือน</button>
 </div>
 
 <script>
-    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbytW5au3OsXJWr2h47TqxgTIzbvLUm0-KB5c4aGBRMm9Gz__3MJEKcy_dNwMOJrHds/exec'; // **ใส่ URL ของ Google Apps Script ที่เพิ่งอัปเดตใหม่**
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbytW5au3OsXJWr2h47TqxgTIzbvLUm0-KB5c4aGBRMm9Gz__3MJEKcy_dNwMOJrHds/exec'; // **อย่าลืมใส่ URL ที่มี /exec**
+    let allTasks = [];
 
-    // ดึงรายชื่อมาสร้าง Checkbox ทันทีที่เปิดหน้าเว็บ
+    // สร้างตัวเลือกเวลา 00-23 และ 00-59
     window.onload = async function() {
+        const hh = document.getElementById('taskTimeHH');
+        const mm = document.getElementById('taskTimeMM');
+        for(let i=0; i<=23; i++) hh.innerHTML += `<option value="${i.toString().padStart(2, '0')}">${i.toString().padStart(2, '0')} น.</option>`;
+        for(let i=0; i<=59; i+=5) mm.innerHTML += `<option value="${i.toString().padStart(2, '0')}">${i.toString().padStart(2, '0')} นาที</option>`; // เพิ่มทีละ 5 นาทีเพื่อความง่าย
+
         try {
             const response = await fetch(GAS_API_URL);
             const result = await response.json();
-            const users = result.users;
+            allTasks = result.tasks || [];
+            const users = result.users || [];
             
-            const container = document.getElementById('userCheckboxes');
-            container.innerHTML = '';
-            
+            let checkboxesHTML = '';
             users.forEach(user => {
-                container.innerHTML += `
-                    <div class="user-item">
-                        <input type="checkbox" value="${user}" class="user-check">
-                        <label style="margin:0; font-weight:normal;">${user}</label>
-                    </div>
-                `;
+                checkboxesHTML += `<div class="user-item"><input type="checkbox" value="${user}" class="user-check"><label style="margin:0; font-weight:normal;">${user}</label></div>`;
             });
+            
+            document.getElementById('userCheckboxes').innerHTML = checkboxesHTML;
+            // ใช้รายชื่อเดียวกันสำหรับผู้บังคับบัญชา (แต่คนละ Class เพื่อแยกค่า)
+            document.getElementById('commanderCheckboxes').innerHTML = checkboxesHTML.replace(/user-check/g, 'commander-check');
+            
+            renderManageTasks();
         } catch (error) {
-            document.getElementById('userCheckboxes').innerHTML = 'โหลดรายชื่อไม่สำเร็จ โปรดรีเฟรชหน้าเว็บ';
+            alert('โหลดรายชื่อไม่สำเร็จ');
         }
     }
 
-    // ฟังก์ชันส่งข้อมูล
+    // ฟังก์ชันจัดการเปิด/ปิด ส่วนลบงาน
+    function toggleManageSection() {
+        const sec = document.getElementById('manageSection');
+        sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function renderManageTasks() {
+        const container = document.getElementById('taskListContainer');
+        if(allTasks.length === 0) { container.innerHTML = 'ไม่มีงานในระบบ'; return; }
+        container.innerHTML = '';
+        
+        // แสดงจากใหม่ไปเก่า (กลับด้าน Array)
+        [...allTasks].reverse().forEach(task => {
+            container.innerHTML += `
+                <div class="task-card">
+                    <div>
+                        <strong>${task.Task_Name}</strong><br>
+                        <span style="font-size: 14px; color: #666;">วันที่: ${task.Date} | เวลา: ${task.Time}</span>
+                    </div>
+                    <button class="btn btn-delete" onclick="deleteTask('${task.Task_ID}')">ลบ</button>
+                </div>
+            `;
+        });
+    }
+
+    async function deleteTask(taskId) {
+        if(!confirm("คุณต้องการลบงานนี้ใช่หรือไม่? (หากต้องการแก้ไข ให้ลบแล้วสร้างใหม่)")) return;
+        try {
+            await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteTask', taskId: taskId }) });
+            alert('ลบงานเรียบร้อยแล้ว');
+            window.location.reload();
+        } catch(e) { alert('เกิดข้อผิดพลาด'); }
+    }
+
     async function submitTask() {
         const name = document.getElementById('taskName').value;
         const date = document.getElementById('taskDate').value;
-        const time = document.getElementById('taskTime').value;
+        const time = `${document.getElementById('taskTimeHH').value}:${document.getElementById('taskTimeMM').value}`;
+        const location = document.getElementById('taskLocation').value;
         
-        // รวบรวมรายชื่อคนที่ถูกติ๊กเลือก
-        const checkboxes = document.querySelectorAll('.user-check:checked');
-        let selectedUsers = [];
-        checkboxes.forEach(box => selectedUsers.push(box.value));
+        const userBoxes = document.querySelectorAll('.user-check:checked');
+        const commanderBoxes = document.querySelectorAll('.commander-check:checked');
+        let selectedUsers = [], selectedCommanders = [];
+        userBoxes.forEach(box => selectedUsers.push(box.value));
+        commanderBoxes.forEach(box => selectedCommanders.push(box.value));
 
         if (!name || !date || selectedUsers.length === 0) {
-            alert("กรุณากรอกชื่องาน วันที่ และเลือกผู้รับผิดชอบอย่างน้อย 1 คน");
+            alert("กรุณากรอกชื่องาน วันที่ และเลือกผู้ปฏิบัติงานอย่างน้อย 1 คน");
             return;
         }
 
-        // เปลี่ยนปุ่มเป็นสถานะกำลังโหลด
         const btn = document.getElementById('submitBtn');
-        btn.innerText = 'กำลังบันทึก...';
-        btn.disabled = true;
+        btn.innerText = 'กำลังบันทึก...'; btn.disabled = true;
 
-        // รูปแบบข้อมูล วันที่ แปลงจาก YYYY-MM-DD เป็น DD/MM/YYYY
         const dateParts = date.split('-');
         const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
 
         const payload = {
-            action: 'createTask',
-            taskName: name,
-            taskDate: formattedDate,
-            taskTime: time,
-            assignees: selectedUsers.join(', ') // แปลงเป็น String คั่นด้วยลูกน้ำ
+            action: 'createTask', taskName: name, taskDate: formattedDate, taskTime: time,
+            location: location, commanders: selectedCommanders.join(', '), assignees: selectedUsers.join(', ')
         };
 
         try {
-            await fetch(GAS_API_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
+            await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) });
             alert('สร้างงานและแจ้งเตือนเรียบร้อยแล้ว!');
-            window.location.reload(); // รีเฟรชหน้าจอเคลียร์ฟอร์ม
-        } catch (error) {
-            alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
-            btn.innerText = 'บันทึกและส่งแจ้งเตือน';
-            btn.disabled = false;
-        }
+            window.location.reload(); 
+        } catch (error) { alert('เกิดข้อผิดพลาด'); btn.innerText = 'บันทึกและส่งแจ้งเตือน'; btn.disabled = false; }
     }
 </script>
 </body>
