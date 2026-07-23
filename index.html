@@ -64,19 +64,25 @@
         const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbytW5au3OsXJWr2h47TqxgTIzbvLUm0-KB5c4aGBRMm9Gz__3MJEKcy_dNwMOJrHds/exec'; // <<--- ตรงนี้สำคัญมาก ต้องใส่ให้ถูก
         let allTasks = [];
 
-        async function main() {
+                async function main() {
             try {
                 const response = await fetch(GAS_API_URL);
                 const result = await response.json();
                 allTasks = result.tasks || [];
                 const users = result.users || [];
+                const commanders = result.commanders || []; // ดึงข้อมูลผู้บังคับบัญชา
                 
-                // สร้าง Dropdown ผู้ปฏิบัติงานและผู้บังคับบัญชา
                 const userFilter = document.getElementById('userFilter');
                 const cmdFilter = document.getElementById('commanderFilter');
+                
                 users.forEach(u => {
                     userFilter.innerHTML += `<option value="${u}">${u}</option>`;
-                    cmdFilter.innerHTML += `<option value="${u}">${u}</option>`;
+                });
+
+                // เพิ่มตัวเลือก "ไม่มี" ให้ค้นหาได้ด้วย
+                cmdFilter.innerHTML += `<option value="ไม่มี">- ไม่มีผู้บังคับบัญชา -</option>`;
+                commanders.forEach(c => {
+                    cmdFilter.innerHTML += `<option value="${c}">${c}</option>`;
                 });
 
                 applyFilters();
@@ -84,6 +90,7 @@
                 document.getElementById('taskContainer').innerHTML = '<div class="loading">เกิดข้อผิดพลาดในการโหลดข้อมูล (ตรวจสอบ URL)</div>';
             }
         }
+
 
         function applyFilters() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
