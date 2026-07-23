@@ -76,30 +76,39 @@
 </div>
 
 <script>
-    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbytW5au3OsXJWr2h47TqxgTIzbvLUm0-KB5c4aGBRMm9Gz__3MJEKcy_dNwMOJrHds/exec'; // **อย่าลืมใส่ URL ที่มี /exec**
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbytW5au3OsXJWr2h47TqxgTIzbvLUm0-KB5c4aGBRMm9Gz__3MJEKcy_dNwMOJrHds/exec'; 
     let allTasks = [];
 
-    // สร้างตัวเลือกเวลา 00-23 และ 00-59
+    // สร้างตัวเลือกเวลา
     window.onload = async function() {
         const hh = document.getElementById('taskTimeHH');
         const mm = document.getElementById('taskTimeMM');
         for(let i=0; i<=23; i++) hh.innerHTML += `<option value="${i.toString().padStart(2, '0')}">${i.toString().padStart(2, '0')} น.</option>`;
-        for(let i=0; i<=59; i+=5) mm.innerHTML += `<option value="${i.toString().padStart(2, '0')}">${i.toString().padStart(2, '0')} นาที</option>`; // เพิ่มทีละ 5 นาทีเพื่อความง่าย
+        for(let i=0; i<=59; i+=5) mm.innerHTML += `<option value="${i.toString().padStart(2, '0')}">${i.toString().padStart(2, '0')} นาที</option>`; 
 
         try {
             const response = await fetch(GAS_API_URL);
             const result = await response.json();
             allTasks = result.tasks || [];
             const users = result.users || [];
+            const commanders = result.commanders || []; // รับข้อมูลผู้บังคับบัญชาที่แยกมา
             
-            let checkboxesHTML = '';
+            // สร้าง Checkbox ผู้ปฏิบัติงาน
+            let userHTML = '';
             users.forEach(user => {
-                checkboxesHTML += `<div class="user-item"><input type="checkbox" value="${user}" class="user-check"><label style="margin:0; font-weight:normal;">${user}</label></div>`;
+                userHTML += `<div class="user-item"><input type="checkbox" value="${user}" class="user-check"><label style="margin:0; font-weight:normal;">${user}</label></div>`;
             });
+            document.getElementById('userCheckboxes').innerHTML = userHTML;
             
-            document.getElementById('userCheckboxes').innerHTML = checkboxesHTML;
-            // ใช้รายชื่อเดียวกันสำหรับผู้บังคับบัญชา (แต่คนละ Class เพื่อแยกค่า)
-            document.getElementById('commanderCheckboxes').innerHTML = checkboxesHTML.replace(/user-check/g, 'commander-check');
+            // สร้าง Checkbox ผู้บังคับบัญชา (พร้อมเพิ่มตัวเลือก 'ไม่มี' ไว้บนสุด)
+            let cmdHTML = `<div class="user-item" style="background-color: #fff; padding: 5px; border-radius: 5px; margin-bottom: 10px;">
+                            <input type="checkbox" value="ไม่มี" class="commander-check" checked>
+                            <label style="margin:0; font-weight:normal; color:#666;">- ไม่มี (None) -</label>
+                           </div>`;
+            commanders.forEach(cmd => {
+                cmdHTML += `<div class="user-item"><input type="checkbox" value="${cmd}" class="commander-check"><label style="margin:0; font-weight:normal;">${cmd}</label></div>`;
+            });
+            document.getElementById('commanderCheckboxes').innerHTML = cmdHTML;
             
             renderManageTasks();
         } catch (error) {
@@ -107,18 +116,15 @@
         }
     }
 
-    // ฟังก์ชันจัดการเปิด/ปิด ส่วนลบงาน
-    function toggleManageSection() {
+    function toggleManageSection() { /* โค้ดเดิม */
         const sec = document.getElementById('manageSection');
         sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
     }
 
-    function renderManageTasks() {
+    function renderManageTasks() { /* โค้ดเดิม */
         const container = document.getElementById('taskListContainer');
         if(allTasks.length === 0) { container.innerHTML = 'ไม่มีงานในระบบ'; return; }
         container.innerHTML = '';
-        
-        // แสดงจากใหม่ไปเก่า (กลับด้าน Array)
         [...allTasks].reverse().forEach(task => {
             container.innerHTML += `
                 <div class="task-card">
@@ -132,8 +138,8 @@
         });
     }
 
-    async function deleteTask(taskId) {
-        if(!confirm("คุณต้องการลบงานนี้ใช่หรือไม่? (หากต้องการแก้ไข ให้ลบแล้วสร้างใหม่)")) return;
+    async function deleteTask(taskId) { /* โค้ดเดิม */
+        if(!confirm("คุณต้องการลบงานนี้ใช่หรือไม่?")) return;
         try {
             await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteTask', taskId: taskId }) });
             alert('ลบงานเรียบร้อยแล้ว');
@@ -150,8 +156,18 @@
         const userBoxes = document.querySelectorAll('.user-check:checked');
         const commanderBoxes = document.querySelectorAll('.commander-check:checked');
         let selectedUsers = [], selectedCommanders = [];
+        
         userBoxes.forEach(box => selectedUsers.push(box.value));
         commanderBoxes.forEach(box => selectedCommanders.push(box.value));
+
+        // ลอจิกป้องกันความผิดพลาด: ถ้าเลือกผู้บังคับบัญชาคนอื่นด้วย ให้เอาคำว่า "ไม่มี" ออก
+        if (selectedCommanders.length > 1 && selectedCommanders.includes('ไม่มี')) {
+            selectedCommanders = selectedCommanders.filter(c => c !== 'ไม่มี');
+        }
+        // ถ้าแอดมินลืมติ๊กอะไรเลย ให้ถือว่า "ไม่มี"
+        if (selectedCommanders.length === 0) {
+            selectedCommanders = ['ไม่มี'];
+        }
 
         if (!name || !date || selectedUsers.length === 0) {
             alert("กรุณากรอกชื่องาน วันที่ และเลือกผู้ปฏิบัติงานอย่างน้อย 1 คน");
@@ -175,6 +191,7 @@
             window.location.reload(); 
         } catch (error) { alert('เกิดข้อผิดพลาด'); btn.innerText = 'บันทึกและส่งแจ้งเตือน'; btn.disabled = false; }
     }
+
 </script>
 </body>
 </html>
