@@ -183,10 +183,10 @@
 
                 container.innerHTML += `
                     <div class="task-card">
-                        <div class="task-title">${task.Task_Name}</div>
+                        <div class="task-title">${task.Task_Name}</div><br>
                         <div class="task-detail">📅 ${task.Date} | ⏰ ${displayTime} น.</div>
-                        <div class="task-detail">📍 สถานที่: ${locationTxt}</div>
-                        <div class="task-detail">⭐ ผบช.: ${cmdTxt}</div>
+                        <div class="task-detail">📍 สถานที่: ${locationTxt}</div><br>
+                        <div class="task-detail">⭐ ผบช.: ${cmdTxt}</div><br>
                         <div class="task-detail">👤 ผู้รับผิดชอบ: ${task.Assignee}</div>
                         <div class="status-update">
                             <span style="font-size:13px; font-weight:600; color: ${statusColor};">สถานะ: ${task.Status}</span>
