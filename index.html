@@ -61,16 +61,36 @@
     <div id="taskContainer"><div class="loading">กำลังโหลดข้อมูล...</div></div>
 
     <script>
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbytW5au3OsXJWr2h47TqxgTIzbvLUm0-KB5c4aGBRMm9Gz__3MJEKcy_dNwMOJrHds/exec'; // <<--- ตรงนี้สำคัญมาก ต้องใส่ให้ถูก
+                const GAS_API_URL = 'ใส่_URL_GAS_ของคุณที่นี่'; // ลิงก์ /exec
+        const LIFF_ID = 'ใส่_LIFF_ID_ของคุณที่นี่'; // เอามาจากหน้า LINE Developers
         let allTasks = [];
 
-                async function main() {
+        async function main() {
             try {
+                // 1. เริ่มต้นระบบ LIFF
+                await liff.init({ liffId: LIFF_ID });
+
+                // 2. ถ้าผู้ใช้ล็อกอินผ่านแอป LINE อยู่แล้ว
+                if (liff.isLoggedIn()) {
+                    const profile = await liff.getProfile();
+                    
+                    // แอบส่งข้อมูล ID และชื่อไลน์ ไปให้หลังบ้านเช็กและลงทะเบียนแบบเงียบๆ
+                    fetch(GAS_API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'autoRegister',
+                            userId: profile.userId,
+                            displayName: profile.displayName
+                        })
+                    }).catch(e => console.log("Register error: ", e));
+                }
+
+                // 3. โหลดข้อมูลงานใน Dashboard ตามปกติ
                 const response = await fetch(GAS_API_URL);
                 const result = await response.json();
                 allTasks = result.tasks || [];
                 const users = result.users || [];
-                const commanders = result.commanders || []; // ดึงข้อมูลผู้บังคับบัญชา
+                const commanders = result.commanders || []; 
                 
                 const userFilter = document.getElementById('userFilter');
                 const cmdFilter = document.getElementById('commanderFilter');
@@ -79,7 +99,6 @@
                     userFilter.innerHTML += `<option value="${u}">${u}</option>`;
                 });
 
-                // เพิ่มตัวเลือก "ไม่มี" ให้ค้นหาได้ด้วย
                 cmdFilter.innerHTML += `<option value="ไม่มี">- ไม่มีผู้บังคับบัญชา -</option>`;
                 commanders.forEach(c => {
                     cmdFilter.innerHTML += `<option value="${c}">${c}</option>`;
@@ -87,9 +106,10 @@
 
                 applyFilters();
             } catch (error) {
-                document.getElementById('taskContainer').innerHTML = '<div class="loading">เกิดข้อผิดพลาดในการโหลดข้อมูล (ตรวจสอบ URL)</div>';
+                document.getElementById('taskContainer').innerHTML = '<div class="loading">เกิดข้อผิดพลาดในการโหลดข้อมูล (ตรวจสอบ LIFF ID และ URL)</div>';
             }
         }
+
 
 
         function applyFilters() {
