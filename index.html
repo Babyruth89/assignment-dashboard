@@ -151,6 +151,19 @@
             return new Date(parts[2], parts[1] - 1, parts[0]);
         }
 
+                // ฟังก์ชันช่วยแปลงเวลาให้เป็น 24 ชั่วโมง (HH:mm)
+        function formatTimeDisplay(timeStr) {
+            if (!timeStr) return '-';
+            // ถ้าข้อมูลติดรูปแบบ 1899-12-30T... มาให้แปลงเป็นเวลาปกติ
+            if (timeStr.toString().includes('T')) {
+                const dateObj = new Date(timeStr);
+                // ใช้ en-GB เพื่อบังคับให้เป็นรูปแบบ 24 ชั่วโมงเสมอ
+                return dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); 
+            }
+            // ถ้าเป็นเวลาปกติอยู่แล้ว (เช่น 10:00) ให้ส่งค่าเดิมกลับไป
+            return timeStr;
+        }
+
         function renderTasks(tasks) {
             const container = document.getElementById('taskContainer');
             if (tasks.length === 0) { container.innerHTML = '<div class="loading">ไม่พบภารกิจ</div>'; return; }
@@ -160,17 +173,20 @@
                 const locationTxt = task.Location ? task.Location : '-';
                 const cmdTxt = task.Commander ? task.Commander : '-';
                 
+                // เรียกใช้ฟังก์ชันแปลงเวลา
+                const displayTime = formatTimeDisplay(task.Time);
+                
                 // แยกสีสถานะเพื่อความชัดเจน
                 let statusColor = "#333";
-                if(task.Status === "เสร็จสิ้น") statusColor = "#4CAF50"; // สีเขียว
-                if(task.Status === "กำลังดำเนินการ") statusColor = "#ff9800"; // สีส้ม
+                if(task.Status === "เสร็จสิ้น") statusColor = "#4CAF50"; 
+                if(task.Status === "กำลังดำเนินการ") statusColor = "#ff9800"; 
 
                 container.innerHTML += `
                     <div class="task-card">
                         <div class="task-title">${task.Task_Name}</div>
-                        <div class="task-detail">📅 ${task.Date} | ⏰ ${task.Time}</div>
+                        <div class="task-detail">📅 ${task.Date} | ⏰ ${displayTime} น.</div>
                         <div class="task-detail">📍 สถานที่: ${locationTxt}</div>
-                        <div class="task-detail">⭐ ผบ.เหตุการณ์: ${cmdTxt}</div>
+                        <div class="task-detail">⭐ ผบช.: ${cmdTxt}</div>
                         <div class="task-detail">👤 ผู้รับผิดชอบ: ${task.Assignee}</div>
                         <div class="status-update">
                             <span style="font-size:13px; font-weight:600; color: ${statusColor};">สถานะ: ${task.Status}</span>
@@ -185,6 +201,7 @@
                 `;
             });
         }
+
 
         async function updateStatus(taskId, newStatus) {
             alert(`กำลังอัปเดตสถานะ...`);
