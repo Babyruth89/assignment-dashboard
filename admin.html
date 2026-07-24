@@ -159,6 +159,9 @@
         const time = `${document.getElementById('taskTimeHH').value}:${document.getElementById('taskTimeMM').value}`;
         const location = document.getElementById('taskLocation').value;
         
+        // ดึงค่าการแต่งกาย
+        const dressCode = document.getElementById('taskDressCode').value; 
+        
         const userBoxes = document.querySelectorAll('.user-check:checked');
         const commanderBoxes = document.querySelectorAll('.commander-check:checked');
         let selectedUsers = [], selectedCommanders = [];
@@ -166,11 +169,9 @@
         userBoxes.forEach(box => selectedUsers.push(box.value));
         commanderBoxes.forEach(box => selectedCommanders.push(box.value));
 
-        // ลอจิกป้องกันความผิดพลาด: ถ้าเลือกผู้บังคับบัญชาคนอื่นด้วย ให้เอาคำว่า "ไม่มี" ออก
         if (selectedCommanders.length > 1 && selectedCommanders.includes('ไม่มี')) {
             selectedCommanders = selectedCommanders.filter(c => c !== 'ไม่มี');
         }
-        // ถ้าแอดมินลืมติ๊กอะไรเลย ให้ถือว่า "ไม่มี"
         if (selectedCommanders.length === 0) {
             selectedCommanders = ['ไม่มี'];
         }
@@ -188,7 +189,10 @@
 
         const payload = {
             action: 'createTask', taskName: name, taskDate: formattedDate, taskTime: time,
-            location: location, commanders: selectedCommanders.join(', '), assignees: selectedUsers.join(', ')
+            location: location || '-', 
+            dressCode: dressCode || '-', // ส่งค่าการแต่งกาย (ถ้าว่างให้ขีด -)
+            commanders: selectedCommanders.join(', '), 
+            assignees: selectedUsers.join(', ')
         };
 
         try {
@@ -197,6 +201,7 @@
             window.location.reload(); 
         } catch (error) { alert('เกิดข้อผิดพลาด'); btn.innerText = 'บันทึกและส่งแจ้งเตือน'; btn.disabled = false; }
     }
+
 
 </script>
 </body>
